@@ -1,13 +1,22 @@
+/*
 #include <netinet/in.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #define PORT 8080
+*/
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
+
+#define userLength 21
+#define passLength 21
+bool validarUsuario(char* user, char* pass);
 
 int main(int argc, char const* argv[])
 {
+    /*
     int server_fd, new_socket, valread;
     struct sockaddr_in address;
     int opt = 1;
@@ -62,5 +71,36 @@ int main(int argc, char const* argv[])
     }
     // closing the listening socket
     shutdown(server_fd, SHUT_RDWR);
+    */
+    
+    printf("%d", validarUsuario("federico", "vsoaSurvivor2"));
+
     return 0;
 }
+
+bool validarUsuario(char* user, char* pass)
+{
+    FILE* infoUsuarios = fopen("infoUsuarios.txt", "r");
+    if (infoUsuarios == NULL) 
+    {
+        printf("Error: no pudo abrirse infoUsuarios.txt\n");
+        return false;
+    }
+        
+    char user_i[userLength];
+    char pass_i[passLength];
+    bool userValido = false;
+    
+    // Ignorar encabezados
+    fscanf(infoUsuarios, "%s %s", user_i, pass_i);
+    // Buscar linealmente entre los usuarios registrados
+    while (fscanf(infoUsuarios, "%s %s", user_i, pass_i) == 2)
+    {
+        if ((strcmp(user_i, user) == 0) && (strcmp(pass_i, pass) == 0))
+            userValido = true;
+    }
+    fclose(infoUsuarios);
+    
+    return userValido;
+}
+
