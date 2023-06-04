@@ -23,10 +23,7 @@ struct credencial
 // Gestion de la conexion
 #define PORT 8080
 
-struct sockaddr_in serv_addr;
-int server_fd;
-
-void configurar_conexion(char* dir_server);
+void configurar_conexion(struct sockaddr_in* serv_addr, int* server_fd, char* dir_server);
 
 // -----------------------------------------------------------------
 // Misc
@@ -35,14 +32,16 @@ void gestionar_parametros(int argc, char* argv[], char* dir_server, struct crede
 // -----------------------------------------------------------------
 int main(int argc, char* argv[])
 {
-    struct credencial cred = {"", ""};//{ "federicoPacheco", "vsoaSurvivor2" };
+    struct credencial cred = { "", "" };//{ "federicoPacheco", "vsoaSurvivor2" };
     char token[TOKEN_LEN] = ERROR_TOKEN;
-     
     char dir_server[16];
 
     gestionar_parametros(argc, argv, dir_server, &cred, token);
-    
-    configurar_conexion(dir_server);
+
+    struct sockaddr_in serv_addr;
+    int server_fd;
+
+    configurar_conexion(&serv_addr, &server_fd, dir_server);
     
     // Enviar credenciales al servidor
     send(server_fd, (void*) &cred, sizeof(struct credencial), 0);
@@ -55,7 +54,6 @@ int main(int argc, char* argv[])
     // Cerrar la conexion
     close(server_fd);
     
-
     return 0;
 }
 
@@ -88,26 +86,26 @@ void gestionar_parametros(int argc, char* argv[], char* dir_server, struct crede
     } while (opt != -1);
 }
 
-void configurar_conexion(char* dir_server)
+void configurar_conexion(struct sockaddr_in* serv_addr, int* server_fd, char* dir_server)
 {
     // Creacion del socket
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+    if ((*server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
     {
         perror("Error: no se pudo crear el socket");
         exit(EXIT_FAILURE);
     }
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
+    serv_addr -> sin_family = AF_INET;
+    serv_addr -> sin_port = htons(PORT);
     // Convertir direccion ip en texto a binario
-    if (inet_pton(AF_INET, dir_server, &serv_addr.sin_addr) <= 0) 
+    if (inet_pton(AF_INET, dir_server, &serv_addr -> sin_addr) <= 0) 
     {
         printf("Error: direccion invalida\n");
         exit(EXIT_FAILURE);
     }
 
     // Conectarse con el servidor
-    if (connect(server_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) 
+    if (connect(*server_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) 
     {
         printf("Error: conexion fallida\n");
         exit(EXIT_FAILURE);

@@ -28,16 +28,18 @@ char* generarToken(struct credencial cred);
 #define PORT 8080
 #define MAX_AUTH 5
 
-struct sockaddr_in address;
-int server_fd, opt;
-int addrlen = sizeof(address);
 
-void configurar_conexion();
+
+void configurar_conexion(struct sockaddr_in* address, int* server_fd, int* opt);
 
 // -----------------------------------------------------------------
 int main(int argc, char const* argv[])
 {
-    configurar_conexion();
+    struct sockaddr_in address;
+    int server_fd, opt;
+    int addrlen = sizeof(address);
+    
+    configurar_conexion(&address, &server_fd, &opt);
 
     int client_fd;
     struct credencial cred_client;
@@ -112,35 +114,35 @@ char* generarToken(struct credencial cred)
     return "1234";
 }
 
-void configurar_conexion() 
+void configurar_conexion(struct sockaddr_in* address, int* server_fd, int* opt)
 {
     // Creacion del socket
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+    if ((*server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
     {
         perror("Error: no se pudo crear el socket");
         exit(EXIT_FAILURE);
     }
 
     // Setear las opciones del socket
-    opt = 1;
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) 
+    *opt = 1;
+    if (setsockopt(*server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) 
     {
         perror("Error: no se pudieron setear las opciones del socket");
         exit(EXIT_FAILURE);
     }
 
     // Asignar ip y numero de puerto
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY; // inet_addr("<dir-ip>");
-    address.sin_port = htons(PORT);
-    if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) 
+    address -> sin_family = AF_INET;
+    address -> sin_addr.s_addr = INADDR_ANY; // inet_addr("<dir-ip>");
+    address -> sin_port = htons(PORT);
+    if (bind(*server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) 
     {
         perror("Error: no se pudo asignar ip y numero de puerto");
         exit(EXIT_FAILURE);
     }
 
     // Quedarse escuchando conexiones de clientes
-    if (listen(server_fd, MAX_AUTH) < 0) 
+    if (listen(*server_fd, MAX_AUTH) < 0) 
     {
         perror("Error: no se pudo colocar al servidor en escucha de conexiones de clientes");
         exit(EXIT_FAILURE);
