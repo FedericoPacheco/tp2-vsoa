@@ -1,0 +1,6 @@
+gcc -o client client.c
+scp client ubuntuadm@10.62.245.253:/home/ubuntuadm
+
+gcc -o serverAuth serverAuth.c
+scp serverAuth ubuntuadm@10.62.245.6:/home/ubuntuadm
+scp info_usuarios.txt ubuntuadm@10.62.245.6:/home/ubuntuadm

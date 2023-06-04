@@ -1,46 +1,73 @@
 #include <arpa/inet.h>
-#include <stdio.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+// -----------------------------------------------------------------
+// Autenticacion del usuario
+#define USER_LEN 21
+#define PASS_LEN 21
+struct credencial
+{
+    char user[USER_LEN];
+    char pass[PASS_LEN];
+};
+
+// -----------------------------------------------------------------
+// Gestion de la conexion
 #define PORT 8080
-  
+
+struct sockaddr_in serv_addr;
+int server_fd;
+
+void configurar_conexion(const char* dir_server);
+
+// -----------------------------------------------------------------
 int main(int argc, char const* argv[])
 {
-    int status, valread, client_fd;
-    struct sockaddr_in serv_addr;
-    char* hello = "Hello from client";
-    char buffer[1024] = { 0 };
-    if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("\n Socket creation error \n");
-        return -1;
-    }
+    configurar_conexion(argv[1]);
+
+    struct credencial cred = { "federicoPacheco", "vsoaSurvivor2" };
+    char token[USER_LEN];
+
+    // Enviar credenciales al servidor
+    send(server_fd, (void*) &cred, sizeof(struct credencial), 0);
+    printf("Credenciales enviadas a serverAuth: user: %s pass: %s\n", cred.user, cred.pass);
+
+    // Obtener token
+    read(server_fd, token, USER_LEN);
+    printf("Token obtenido de serverAuth: %s\n", token);
   
+    // Cerrar la conexion
+    close(server_fd);
+    return 0;
+}
+
+void configurar_conexion(const char* dir_server)
+{
+    // Creacion del socket
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+    {
+        perror("Error: no se pudo crear el socket");
+        exit(EXIT_FAILURE);
+    }
+
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT);
-  
-    // Convert IPv4 and IPv6 addresses from text to binary
-    // form
-    if (inet_pton(AF_INET, argv[1], &serv_addr.sin_addr)
-        <= 0) {
-        printf(
-            "\nInvalid address/ Address not supported \n");
-        return -1;
+    // Convertir direccion ip en texto a binario
+    if (inet_pton(AF_INET, dir_server, &serv_addr.sin_addr) <= 0) 
+    {
+        printf("Error: direccion invalida\n");
+        exit(EXIT_FAILURE);
     }
-  
-    if ((status
-         = connect(client_fd, (struct sockaddr*)&serv_addr,
-                   sizeof(serv_addr)))
-        < 0) {
-        printf("\nConnection Failed \n");
-        return -1;
+
+    // Conectarse con el servidor
+    if (connect(server_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) 
+    {
+        printf("Error: conexion fallida\n");
+        exit(EXIT_FAILURE);
     }
-    send(client_fd, hello, strlen(hello), 0);
-    printf("Hello message sent\n");
-    valread = read(client_fd, buffer, 1024);
-    printf("%s\n", buffer);
-  
-    // closing the connected socket
-    close(client_fd);
-    return 0;
 }
