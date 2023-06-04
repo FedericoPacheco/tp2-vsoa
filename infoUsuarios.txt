@@ -1,4 +1,0 @@
-USER			PASS
-davidHarispe		diffEq271
-ezequielIzaguirre	vsoaSurvivor1
-federicoPacheco		vsoaSurvivor2
