@@ -10,6 +10,9 @@
 // Autenticacion del usuario
 #define USER_LEN 21
 #define PASS_LEN 21
+#define TOKEN_LEN 21
+#define ERROR_TOKEN "-1"
+
 struct credencial
 {
     char user[USER_LEN];
@@ -23,16 +26,24 @@ struct credencial
 struct sockaddr_in serv_addr;
 int server_fd;
 
-void configurar_conexion(const char* dir_server);
+void configurar_conexion(char* dir_server);
 
 // -----------------------------------------------------------------
-int main(int argc, char const* argv[])
+// Misc
+void gestionar_parametros(int argc, char* argv[], char* dir_server, struct credencial* cred, char* token);
+
+// -----------------------------------------------------------------
+int main(int argc, char* argv[])
 {
-    configurar_conexion(argv[1]);
+    struct credencial cred = {"", ""};//{ "federicoPacheco", "vsoaSurvivor2" };
+    char token[TOKEN_LEN] = ERROR_TOKEN;
+     
+    char dir_server[16];
 
-    struct credencial cred = { "federicoPacheco", "vsoaSurvivor2" };
-    char token[USER_LEN];
-
+    gestionar_parametros(argc, argv, dir_server, &cred, token);
+    
+    configurar_conexion(dir_server);
+    
     // Enviar credenciales al servidor
     send(server_fd, (void*) &cred, sizeof(struct credencial), 0);
     printf("Credenciales enviadas a serverAuth: user: %s pass: %s\n", cred.user, cred.pass);
@@ -43,10 +54,41 @@ int main(int argc, char const* argv[])
   
     // Cerrar la conexion
     close(server_fd);
+    
+
     return 0;
 }
 
-void configurar_conexion(const char* dir_server)
+void gestionar_parametros(int argc, char* argv[], char* dir_server, struct credencial* cred, char* token)
+{
+    strcpy(dir_server, argv[1]);//, sizeof(dir_server));
+
+    int opt;
+    do
+    {
+        opt = getopt(argc, argv, "u:p:t:c:");
+        switch (opt)
+        {
+        case 'u':
+            strcpy(cred->user, optarg);//, USER_LEN);
+            break;
+        case 'p':
+            strcpy(cred->pass, optarg);//, PASS_LEN);
+            break;
+        case 't':
+            strcpy(token, optarg); //, TOKEN_LEN);
+            break;
+        case 'c':
+            // TO DO
+            break;
+        case '?':
+            printf("Error: opcion invalida: -%c", optopt);
+            break;
+        }
+    } while (opt != -1);
+}
+
+void configurar_conexion(char* dir_server)
 {
     // Creacion del socket
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
