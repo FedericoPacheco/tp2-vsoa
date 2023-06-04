@@ -11,6 +11,9 @@
 // Autenticacion del usuario
 #define USER_LEN 21
 #define PASS_LEN 21
+#define TOKEN_LEN 21
+#define ERROR_TOKEN "-1"
+
 struct credencial 
 {
     char user[USER_LEN];
@@ -38,26 +41,38 @@ int main(int argc, char const* argv[])
 
     int client_fd;
     struct credencial cred_client;
-    char token[USER_LEN];
+    char token[TOKEN_LEN];
 
     while(true) 
     {
         // Aceptar la conexion del cliente
-    	if ((client_fd = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
+    	if ((client_fd = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) 
+        {
         	perror("Error: no se pudo aceptar la conexion con el cliente");
         	exit(EXIT_FAILURE);
    	 	}
-
-        recv(client_fd, &cred_client, sizeof(struct credencial), 0);
-        printf("Credenciales obtenidas del cliente: user: %s pass: %s\n", cred_client.user, cred_client.pass);
-   	    
-        // Enviar token
-        strcpy(token, generarToken(cred_client));
-        send(client_fd, token, USER_LEN, 0);
-   	    printf("Token enviado al cliente: %s\n", token);
-  
-    	// Cerrar la conexion con el cliente
-    	close(client_fd);
+        else
+        {
+            recv(client_fd, &cred_client, sizeof(struct credencial), 0);
+            printf("El usuario %s esta intentando obtener un token\n", cred_client.user);
+            
+            // Enviar token si el usuario y contrasenia son correctos
+            if (validar_usuario(cred_client))
+            {
+                printf("Contrasenia correcta\n");
+                strcpy(token, generarToken(cred_client));
+            }
+            else
+            {
+                printf("Error: usuario o contrasenia invalidos");
+                strcpy(token, ERROR_TOKEN);
+            }
+            send(client_fd, token, TOKEN_LEN, 0);
+            printf("Token enviado al cliente\n");
+                
+            // Cerrar la conexion con el cliente
+            close(client_fd);
+        }
     }
 
     // Cerrar el socket del servidor
