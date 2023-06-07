@@ -46,8 +46,6 @@ int main(int argc, char* argv[])
     bool auth, inter;
     gestionar_parametros(argc, argv, dir_server, &cred, token, &auth, &inter);
     
-    printf("%d, %d\n", auth, inter);
-
     // Gestionar modos de uso del programa
     // Nota: si se pasan parametros de mas, pero no llegan a cubrir el otro modo de uso, se ignoran
     if ((!auth && !inter) || (auth && inter)) // Incorrecto
@@ -58,13 +56,12 @@ int main(int argc, char* argv[])
     }
     else
     {
-        //configurar_conexion(&serv_addr, &server_fd, dir_server);
+        configurar_conexion(&serv_addr, &server_fd, dir_server);
 
         if (auth && !inter) // modo de uso: autenticacion
         {
             printf("Modo de uso: autenticacion\n");
             
-            /*
             // Enviar credenciales al servidor
             send(server_fd, (void*)&cred, sizeof(struct credencial), 0);
                 printf("Credenciales enviadas a serverAuth: user: %s pass: %s\n", cred.user, cred.pass);
@@ -72,7 +69,6 @@ int main(int argc, char* argv[])
                 // Obtener token
                 read(server_fd, token, USER_LEN);
                 printf("Token obtenido de serverAuth: %s\n", token);
-            */
         }
         else // modo de uso: interaccion
         {
@@ -80,7 +76,7 @@ int main(int argc, char* argv[])
         }
 
         // Cerrar la conexion
-        //close(server_fd);
+        close(server_fd);
     }
 
     return 0;
@@ -155,7 +151,7 @@ void configurar_conexion(struct sockaddr_in* serv_addr, int* server_fd, char* di
     }
 
     // Conectarse con el servidor
-    if (connect(*server_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) 
+    if (connect(*server_fd, (struct sockaddr*) serv_addr, sizeof(*serv_addr)) < 0) 
     {
         printf("Error: conexion fallida\n");
         exit(EXIT_FAILURE);

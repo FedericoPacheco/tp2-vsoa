@@ -66,7 +66,7 @@ int main(int argc, char const* argv[])
             }
             else
             {
-                printf("Error: usuario o contrasenia invalidos");
+                printf("Error: usuario o contrasenia invalidos\n");
                 strcpy(token, ERROR_TOKEN);
             }
             send(client_fd, token, TOKEN_LEN, 0);
@@ -135,7 +135,7 @@ void configurar_conexion(struct sockaddr_in* address, int* server_fd, int* opt)
     address -> sin_family = AF_INET;
     address -> sin_addr.s_addr = INADDR_ANY; // inet_addr("<dir-ip>");
     address -> sin_port = htons(PORT);
-    if (bind(*server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) 
+    if (bind(*server_fd, (struct sockaddr*) address, sizeof(*address)) < 0) 
     {
         perror("Error: no se pudo asignar ip y numero de puerto");
         exit(EXIT_FAILURE);

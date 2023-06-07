@@ -1,5 +1,17 @@
+________________________________________________________________
+client:
+
+ssh ubuntuadm@10.62.245.253
+
 gcc -o client client.c
 scp client ubuntuadm@10.62.245.253:/home/ubuntuadm
+
+./client -d 10.62.245.6 -u federicoPacheco -p vsoaSurvivor2
+
+________________________________________________________________
+serverAuth:
+
+ssh ubuntuadm@10.62.245.6
 
 gcc -o serverAuth serverAuth.c
 scp serverAuth ubuntuadm@10.62.245.6:/home/ubuntuadm
