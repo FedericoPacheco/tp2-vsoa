@@ -8,6 +8,8 @@ scp client ubuntuadm@10.62.245.253:/home/ubuntuadm
 
 ./client -d 10.62.245.6 -u federicoPacheco -p vsoaSurvivor2
 
+  
+
 ________________________________________________________________
 serverAuth:
 
@@ -16,3 +18,21 @@ ssh ubuntuadm@10.62.245.6
 gcc -o serverAuth serverAuth.c
 scp serverAuth ubuntuadm@10.62.245.6:/home/ubuntuadm
 scp info_usuarios.txt ubuntuadm@10.62.245.6:/home/ubuntuadm
+
+
+________________________________________________________________
+serverInteract:
+
+rpcgen -C serverInteract.x
+
+rpcgen -C -Sc serverInteract.x > si_client.c
+rpcgen -C -Ss serverInteract.x > serverInteract.c
+
+
+gcc -g -o si_client serverInteract_clnt.c si_client.c serverInteract_xdr.c -I/usr/include/tirpc -lnsl -ltirpc
+scp si_client ubuntuadm@10.62.245.253:/home/ubuntuadm
+
+gcc -g -o serverInteract serverInteract_svc.c serverInteract.c serverInteract_xdr.c -I/usr/include/tirpc -lnsl -ltirpc
+scp serverInteract ubuntuadm@10.62.245.6:/home/ubuntuadm
+
+

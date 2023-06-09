@@ -1,13 +1,19 @@
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
 // -----------------------------------------------------------------
+// Gestion de la conexion
+#define PORT 8080
+#define MAX_AUTH 5
+
+void configurar_conexion(struct sockaddr_in* address, int* server_fd, int* opt);
+
 // Autenticacion del usuario
 #define USER_LEN 21
 #define PASS_LEN 21
@@ -21,16 +27,7 @@ struct credencial
 };
 
 bool validar_usuario(struct credencial cred);
-char* generarToken(struct credencial cred);
-
-// -----------------------------------------------------------------
-// Gestion de la conexion
-#define PORT 8080
-#define MAX_AUTH 5
-
-
-
-void configurar_conexion(struct sockaddr_in* address, int* server_fd, int* opt);
+char* generar_token(struct credencial cred);
 
 // -----------------------------------------------------------------
 int main(int argc, char const* argv[])
@@ -62,7 +59,7 @@ int main(int argc, char const* argv[])
             if (validar_usuario(cred_client))
             {
                 printf("Contrasenia correcta\n");
-                strcpy(token, generarToken(cred_client));
+                strcpy(token, generar_token(cred_client));
             }
             else
             {
@@ -85,31 +82,32 @@ int main(int argc, char const* argv[])
 
 bool validar_usuario(struct credencial cred)
 {
+    char user_i[USER_LEN];
+    char pass_i[PASS_LEN];
+    bool user_valido = false;
+
     FILE* info_usuarios = fopen("info_usuarios.txt", "r");
     if (info_usuarios == NULL) 
     {
         printf("Error: no pudo abrirse info_usuarios.txt\n");
-        return false;
+    }
+    else
+    {
+        // Ignorar encabezados
+        fscanf(info_usuarios, "%s %s", user_i, pass_i);
+        // Buscar linealmente entre los usuarios registrados
+        while (fscanf(info_usuarios, "%s %s", user_i, pass_i) == 2)
+        {
+            if ((strcmp(user_i, cred.user) == 0) && (strcmp(pass_i, cred.pass) == 0))
+                user_valido = true;
+        }
+        fclose(info_usuarios);
     }
         
-    char user_i[USER_LEN];
-    char pass_i[PASS_LEN];
-    bool user_valido = false;
-    
-    // Ignorar encabezados
-    fscanf(info_usuarios, "%s %s", user_i, pass_i);
-    // Buscar linealmente entre los usuarios registrados
-    while (fscanf(info_usuarios, "%s %s", user_i, pass_i) == 2)
-    {
-        if ((strcmp(user_i, cred.user) == 0) && (strcmp(pass_i, cred.pass) == 0))
-            user_valido = true;
-    }
-    fclose(info_usuarios);
-    
     return user_valido;
 }
 
-char* generarToken(struct credencial cred)
+char* generar_token(struct credencial cred)
 {
     return "1234";
 }
