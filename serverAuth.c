@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
 
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -10,14 +12,14 @@
 // -----------------------------------------------------------------
 // Gestion de la conexion
 #define PORT 8080
-#define MAX_AUTH 5
+#define MAX_CLIENTS 5
 
-void configurar_conexion(struct sockaddr_in* address, int* server_fd, int* opt);
+void configurar_conexion(struct sockaddr_in* sock, int* server_fd, int* opt);
 
 // Autenticacion del usuario
 #define USER_LEN 21
 #define PASS_LEN 21
-#define TOKEN_LEN 21
+#define TOKEN_LEN 7
 #define ERROR_TOKEN "-1"
 
 struct credencial 
@@ -25,41 +27,50 @@ struct credencial
     char user[USER_LEN];
     char pass[PASS_LEN];
 };
+typedef struct credencial credencial;
 
-bool validar_usuario(struct credencial cred);
-char* generar_token(struct credencial cred);
+bool validar_usuario(credencial cred);
+void generar_token(char* token);
 
 // -----------------------------------------------------------------
+// Generacion de tokens
+const char gen_set[] = "0123456789abcdef";
+
 int main(int argc, char const* argv[])
 {
-    struct sockaddr_in address;
+    struct sockaddr_in sock;
     int server_fd, opt;
-    int addrlen = sizeof(address);
+    int sock_len = sizeof(sock);
     
-    configurar_conexion(&address, &server_fd, &opt);
+    configurar_conexion(&sock, &server_fd, &opt);
 
     int client_fd;
-    struct credencial cred_client;
+    credencial client_cred;
     char token[TOKEN_LEN];
+    char client_addr[16];
 
     while(true) 
     {
         // Aceptar la conexion del cliente
-    	if ((client_fd = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) 
+        if ((client_fd = accept(server_fd, (struct sockaddr*)&sock, (socklen_t*)&sock_len)) < 0)
         {
         	perror("Error: no se pudo aceptar la conexion con el cliente");
         	exit(EXIT_FAILURE);
    	 	}
         else
         {
-            recv(client_fd, &cred_client, sizeof(struct credencial), 0);
-            printf("El usuario %s esta intentando obtener un token\n", cred_client.user);
+            // Obtener la dir ip del cliente
+            inet_ntop(AF_INET, &(sock.sin_addr), client_addr, INET_ADDRSTRLEN);
+            
+            // Recibir credenciales del cliente
+            recv(client_fd, &client_cred, sizeof(credencial), 0);
+            printf("El cliente %s (%s) esta intentando obtener un token\n", client_cred.user, client_addr);
             
             // Enviar token si el usuario y contrasenia son correctos
-            if (validar_usuario(cred_client))
+            if (validar_usuario(client_cred))
             {
                 printf("Contrasenia correcta\n");
-                strcpy(token, generar_token(cred_client));
+                generar_token(token);
             }
             else
             {
@@ -80,7 +91,7 @@ int main(int argc, char const* argv[])
     return 0;
 }
 
-bool validar_usuario(struct credencial cred)
+bool validar_usuario(credencial cred)
 {
     char user_i[USER_LEN];
     char pass_i[PASS_LEN];
@@ -107,12 +118,16 @@ bool validar_usuario(struct credencial cred)
     return user_valido;
 }
 
-char* generar_token(struct credencial cred)
+void generar_token(char* token)
 {
-    return "1234";
+    srand(time(NULL));
+
+    for (int i = 0; i < TOKEN_LEN - 1; i++)
+        token[i] = gen_set[rand() % sizeof(gen_set)];
+    token[TOKEN_LEN - 1] = '\0';
 }
 
-void configurar_conexion(struct sockaddr_in* address, int* server_fd, int* opt)
+void configurar_conexion(struct sockaddr_in* sock, int* server_fd, int* opt)
 {
     // Creacion del socket
     if ((*server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
@@ -130,17 +145,17 @@ void configurar_conexion(struct sockaddr_in* address, int* server_fd, int* opt)
     }
 
     // Asignar ip y numero de puerto
-    address -> sin_family = AF_INET;
-    address -> sin_addr.s_addr = INADDR_ANY; // inet_addr("<dir-ip>");
-    address -> sin_port = htons(PORT);
-    if (bind(*server_fd, (struct sockaddr*) address, sizeof(*address)) < 0) 
+    sock -> sin_family = AF_INET;
+    sock -> sin_addr.s_addr = INADDR_ANY; // inet_addr("<dir-ip>");
+    sock -> sin_port = htons(PORT);
+    if (bind(*server_fd, (struct sockaddr*) sock, sizeof(*sock)) < 0) 
     {
         perror("Error: no se pudo asignar ip y numero de puerto");
         exit(EXIT_FAILURE);
     }
 
     // Quedarse escuchando conexiones de clientes
-    if (listen(*server_fd, MAX_AUTH) < 0) 
+    if (listen(*server_fd, MAX_CLIENTS) < 0) 
     {
         perror("Error: no se pudo colocar al servidor en escucha de conexiones de clientes");
         exit(EXIT_FAILURE);

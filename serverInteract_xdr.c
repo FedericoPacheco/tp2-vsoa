@@ -10,7 +10,7 @@ xdr_params_escribir (XDR *xdrs, params_escribir *objp)
 {
 	register int32_t *buf;
 
-	 if (!xdr_string (xdrs, &objp->token, 20))
+	 if (!xdr_string (xdrs, &objp->token, 7))
 		 return FALSE;
 	 if (!xdr_string (xdrs, &objp->nombre_archivo, 256))
 		 return FALSE;

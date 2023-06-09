@@ -1,13 +1,13 @@
 struct params_escribir
 {
-	string token<20>;
+	string token<7>;
 	string nombre_archivo<256>;
 	string contenido<1024>;
 };
 
 struct params_leer
 {
-	string token<20>;
+	string token<7>;
 	string nombre_archivo<256>;
 	int posicion;
 };
