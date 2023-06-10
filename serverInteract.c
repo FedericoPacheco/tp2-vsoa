@@ -24,19 +24,19 @@ int* escribir_1_svc(params_escribir* argp, struct svc_req* rqstp)
 	{
 		FILE* archivo = fopen(argp->nombre_archivo, "a");
 		if (archivo == NULL)
-			printf("(cliente: %s) Error: no pudo abrirse / crearse el archivo: %s\n", client_addr, argp->nombre_archivo);
+			printf("(cliente: %s) Error: no pudo abrirse / crearse el archivo: %s\n\n", client_addr, argp->nombre_archivo);
 		else
 		{
 			res = fputs(argp->contenido, archivo);
 			if (res >= 0)
-				printf("(cliente: %s) Se escribio con exito en el archivo: %s\n", client_addr, argp->nombre_archivo);
+				printf("(cliente: %s) Se escribio con exito en el archivo: %s\n\n", client_addr, argp->nombre_archivo);
 			else
-				printf("(cliente: %s) Error: no pudo escribirse en el archivo: %s\n", client_addr, argp->nombre_archivo);
+				printf("(cliente: %s) Error: no pudo escribirse en el archivo: %s\n\n", client_addr, argp->nombre_archivo);
 			fclose(archivo);
 		}
 	}
 	else
-		printf("(cliente: %s) Error: el token no es correcto\n", client_addr);
+		printf("(cliente: %s) Error: el token no es correcto\n\n", client_addr);
 
 	return &res;
 }
@@ -56,7 +56,7 @@ char** leer_1_svc(params_leer* argp, struct svc_req* rqstp)
 	{
 		FILE* archivo = fopen(argp->nombre_archivo, "r");
 		if (archivo == NULL)
-			printf("(cliente: %s) Error: no pudo abrirse el archivo: %s\n", client_addr, argp->nombre_archivo);
+			printf("(cliente: %s) Error: no pudo abrirse el archivo: %s\n\n", client_addr, argp->nombre_archivo);
 		else
 		{
 			// Posicionarse dentro del archivo
@@ -67,18 +67,17 @@ char** leer_1_svc(params_leer* argp, struct svc_req* rqstp)
 			int ch;
 			while ((ch = fgetc(archivo)) != EOF && i < cota_sup)
 			{
-				printf("%d:%c ", i, ch);
 				buf[i] = ch;
 				i++;
 			}
 			buf[cota_sup] = '\0';
 
-			printf("(cliente: %s) Se leyo con exito del archivo: %s\n", client_addr, argp->nombre_archivo);
+			printf("(cliente: %s) Se leyo con exito del archivo: %s\n\n", client_addr, argp->nombre_archivo);
 			fclose(archivo);
 		}
 	}
 	else
-		printf("(cliente: %s) Error: el token no es correcto\n", client_addr);
+		printf("(cliente: %s) Error: el token no es correcto\n\n", client_addr);
 
 	return &res;
 }

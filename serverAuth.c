@@ -51,8 +51,11 @@ int main(int argc, char const* argv[])
     credencial client_cred;
     char token[TOKEN_LEN];
     char client_addr[16];
+ 
+    printf("--------------------------\n");
+    printf("|      SERVER AUTH       |\n");
+    printf("--------------------------\n\n");
 
-    printf("SERVER AUTH\n---------------\n");
     while(true) 
     {
         // Aceptar la conexion del cliente

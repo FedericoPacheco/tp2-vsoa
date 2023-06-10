@@ -67,6 +67,13 @@ serverinteract_1(struct svc_req *rqstp, register SVCXPRT *transp)
 int
 main (int argc, char **argv)
 {
+	// ---------------------------------------
+	// Edicion propia
+	printf("--------------------------\n");
+	printf("|    SERVER INTERACT     |\n");
+	printf("--------------------------\n\n");
+	// ---------------------------------------
+
 	register SVCXPRT *transp;
 
 	pmap_unset (serverInteract, v1);

@@ -118,13 +118,13 @@ void gestionar_parametros(int argc, char* argv[], char* server_addr, credencial*
     bool valid_user = false;
     bool valid_pass = false;
     bool valid_token = false;
-    bool valid_opt = false;
+    bool es_leer = false;
+    bool es_escribir = false;
     bool valid_file = false;
     bool valid_ind = false;
     bool valid_bytes = false;
     bool valid_cont = false;
     
-
     while ((opt = getopt(argc, argv, "d:u:p:t:o:f:i:b:c:")) != -1)
     {
         switch (opt)
@@ -146,8 +146,9 @@ void gestionar_parametros(int argc, char* argv[], char* server_addr, credencial*
             strcpy(token, optarg);
             break;
         case 'o':
-            valid_opt = ((strcmp(optarg, OPC_LEER) == 0) || (strcmp(optarg, OPC_ESCRIBIR) == 0));
-            if (valid_opt)
+            es_leer = (strcmp(optarg, OPC_LEER) == 0);
+            es_escribir = (strcmp(optarg, OPC_ESCRIBIR) == 0);
+            if (es_leer || es_escribir)
                 *opc_inter = *optarg;
             break;
         case 'f':
@@ -161,6 +162,7 @@ void gestionar_parametros(int argc, char* argv[], char* server_addr, credencial*
         case 'b':
             valid_bytes = strlen(optarg) > 0;
             *bytes_a_leer_archivo = atoi(optarg);
+            break;
         case 'c':
             valid_cont = strlen(optarg) > 0;
             strcpy(cont_archivo, optarg);
@@ -175,7 +177,12 @@ void gestionar_parametros(int argc, char* argv[], char* server_addr, credencial*
     }
 
     *auth = valid_dir && valid_user && valid_pass; 
-    *inter = valid_dir && valid_token && valid_opt && valid_file && (valid_cont || (valid_ind && valid_bytes));
+    if (es_escribir)
+        *inter = valid_dir && valid_token && valid_file && valid_cont;
+    else if (es_leer)
+        *inter = valid_dir && valid_token && valid_file && valid_ind && valid_bytes;
+    else
+        *inter = false;
 }
 
 void server_auth(struct sockaddr_in* server_sock, int* server_fd, char* server_addr, credencial* cred, char* token)

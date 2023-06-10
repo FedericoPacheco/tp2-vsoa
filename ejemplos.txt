@@ -1,0 +1,6 @@
+./clientSRPC -d 10.62.245.6 -u federicoPacheco -p vsoaSurvivor2
+./clientSRPC -d 10.62.245.6 -t <token> -o w -f test.txt -c "This is a test :)"
+./clientSRPC -d 10.62.245.6 -t <token> -o r -f test.txt -i 10 -b 4
+
+
+
