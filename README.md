@@ -1,11 +1,14 @@
 # TP 2 VSOA
-*Alumno*: Pacheco Pilan, Federico Ignacio  
-*e-mail*: fedepacheco2112@gmail.com  
-*Año*: 2023  
 *Cátedra*: Virtualización y Sistemas Operativos Avanzados  
+*Carrera*: Ingeniería en Sistemas de Información  
+*Universidad*: Universidad Tecnológica Nacional - Facultad Regional Santa Fe  
 *Docentes*:
 - Pessolani, Pablo Andrés
 - Harispe, David Gabriel 
+
+*Alumno*: Pacheco Pilan, Federico Ignacio    
+*e-mail*: fedepacheco2112@gmail.com  
+*Año*: 2023
 
 ## Explicación general de funcionamiento
 ### serverAuth
