@@ -1,4 +1,4 @@
-# TP 2 VSOA
+# TP 2: Sockets y RPC
 *Cátedra*: Virtualización y Sistemas Operativos Avanzados  
 *Carrera*: Ingeniería en Sistemas de Información  
 *Universidad*: Universidad Tecnológica Nacional - Facultad Regional Santa Fe  
