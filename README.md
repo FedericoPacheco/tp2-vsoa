@@ -15,7 +15,7 @@ que le fueron enviadas. Si están correctas genera un token pseudo-aleatorio, lo
 Si no, retorna un token de error. En todo momento muestra por consola en qué estado de operación se encuentra. 
 
 ### serverInteract
-El servidor de interacción ofrece dos servicios a los clientes mediante RPC y conexiones TCP. Si se le pasa un token válido, puede:
+El servidor de interacción ofrece dos servicios a los clientes mediante RPC y conexiones TCP. Si se le pasa un token válido (corroborado contra *tokens_validos.txt*), puede:
 - Leer archivos: provistos una posición inicial y la cantidad de bytes a leer, el servidor lee del archivo especificado
 y retorna al cliente el resultado. 
 - Escribir / crear archivos: especificado un nombre de archivo, si no existe, se crea. Luego, en ambos casos, se escribe
