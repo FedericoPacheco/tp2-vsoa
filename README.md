@@ -2,7 +2,7 @@
 *Alumno*: Pacheco Pilan, Federico Ignacio  
 *e-mail*: fedepacheco2112@gmail.com  
 *Año*: 2023  
-*Cátedra*: virtualización y sistemas operativos avanzados  
+*Cátedra*: Virtualización y Sistemas Operativos Avanzados  
 *Docentes*:
 - Pessolani, Pablo Andrés
 - Harispe, David Gabriel 
