@@ -7,8 +7,7 @@
  // Edicion propia
 #include <stdbool.h>
 bool validar_token(char* token);
-// --------------------------------------
-
+// ---------------------------------------
 
 #ifndef _SERVERINTERACT_H_RPCGEN
 #define _SERVERINTERACT_H_RPCGEN
@@ -32,6 +31,7 @@ struct params_leer {
 	char *token;
 	char *nombre_archivo;
 	int posicion;
+	int bytes_a_leer;
 };
 typedef struct params_leer params_leer;
 

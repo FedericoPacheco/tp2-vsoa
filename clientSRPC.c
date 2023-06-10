@@ -18,8 +18,6 @@ void configurar_conexion(struct sockaddr_in* serv_addr, int* server_fd, char* se
 // Autenticacion del usuario
 #define USER_LEN 21
 #define PASS_LEN 21
-#define TOKEN_LEN 7
-#define ERROR_TOKEN "-1"
 
 struct credencial
 {
@@ -28,21 +26,28 @@ struct credencial
 };
 typedef struct credencial credencial;
 
+// Token
+#define TOKEN_LEN 7
+#define ERROR_TOKEN "-1"
+
+// Misc
 void server_auth(struct sockaddr_in* server_sock, int* server_fd, char* server_addr, credencial* cred, char* token);
 
 // -----------------------------------------------------------------
 // SERVER INTERACT
+// Operaciones con archivos
 const char* OPC_LEER = "r";
 const char* OPC_ESCRIBIR = "w";
 const int OPC_LEN = 2;
 const int FILE_NAME_LEN = 256;
 const int CONT_LEN = 1024;
 
-void server_interact(char* server_addr, char* token, char* opc_inter, char* nombre_archivo, int pos_archivo, char* cont_archivo);
+// Misc
+void server_interact(char* server_addr, char* token, char* opc_inter, char* nombre_archivo, int pos_archivo, int bytes_a_leer_archivo, char* cont_archivo);
 
 // -----------------------------------------------------------------
-// Misc
-void gestionar_parametros(int argc, char* argv[], char* server_addr, credencial* cred, char* token, char* opc_inter, char* nombre_archivo, int* pos_archivo, char* cont_archivo, bool* auth, bool* inter);
+// MISC
+void gestionar_parametros(int argc, char* argv[], char* server_addr, credencial* cred, char* token, char* opc_inter, char* nombre_archivo, int* pos_archivo, int* bytes_a_leer_archivo, char* cont_archivo, bool* auth, bool* inter);
 
 // -----------------------------------------------------------------
 int main(int argc, char* argv[])
@@ -60,11 +65,12 @@ int main(int argc, char* argv[])
     char opc_inter[OPC_LEN];
     char nombre_archivo[FILE_NAME_LEN];
     int pos_archivo;
+    int bytes_a_leer_archivo;
     char cont_archivo[CONT_LEN];
 
     // Entrada de usuario
     bool auth, inter;
-    gestionar_parametros(argc, argv, server_addr, &cred, token, opc_inter, nombre_archivo, &pos_archivo, cont_archivo, &auth, &inter);
+    gestionar_parametros(argc, argv, server_addr, &cred, token, opc_inter, nombre_archivo, &pos_archivo, &bytes_a_leer_archivo, cont_archivo, &auth, &inter);
     
     // Gestionar modos de uso del programa
     // Nota: si se pasan parametros de mas, pero no llegan a cubrir el otro modo de uso, se ignoran
@@ -75,7 +81,7 @@ int main(int argc, char* argv[])
         printf("\tclient -d <dir ip serverAuth> -u <user> -p <pass>\n");
         printf("Interaccion:\n");
         printf("\t Escritura: client -d <dir ip serverInteract> -t <token> -o %s -f <nombre archivo> -c \"<contenido>\"\n", OPC_ESCRIBIR);
-        printf("\t Lectura:   client -d <dir ip serverInteract> -t <token> -o %s -f <nombre archivo> -i <ind lectura>\n", OPC_LEER);
+        printf("\t Lectura:   client -d <dir ip serverInteract> -t <token> -o %s -f <nombre archivo> -i <ind inicial lectura> -b <bytes a leer>\n", OPC_LEER);
     }
     else
     {
@@ -87,14 +93,14 @@ int main(int argc, char* argv[])
         else
         {
             printf("Modo de uso: interaccion\n");
-            server_interact(server_addr, token, opc_inter, nombre_archivo, pos_archivo, cont_archivo);
+            server_interact(server_addr, token, opc_inter, nombre_archivo, pos_archivo, bytes_a_leer_archivo, cont_archivo);
         }   
     }
 
     return EXIT_SUCCESS;
 }
 
-void gestionar_parametros(int argc, char* argv[], char* server_addr, credencial* cred, char* token, char* opc_inter, char* nombre_archivo, int* pos_archivo, char* cont_archivo, bool* auth, bool* inter)
+void gestionar_parametros(int argc, char* argv[], char* server_addr, credencial* cred, char* token, char* opc_inter, char* nombre_archivo, int* pos_archivo, int* bytes_a_leer_archivo, char* cont_archivo, bool* auth, bool* inter)
 {
     memset(server_addr, '\0', 16);
     memset(cred->user, '\0', USER_LEN);
@@ -103,6 +109,7 @@ void gestionar_parametros(int argc, char* argv[], char* server_addr, credencial*
     memset(opc_inter, '\0', OPC_LEN);
     memset(nombre_archivo, '\0', FILE_NAME_LEN);
     *pos_archivo = -1;
+    *bytes_a_leer_archivo = -1;
     memset(cont_archivo, '\0', CONT_LEN);
     
     int opt;
@@ -113,10 +120,12 @@ void gestionar_parametros(int argc, char* argv[], char* server_addr, credencial*
     bool valid_token = false;
     bool valid_opt = false;
     bool valid_file = false;
-    bool valid_cont = false;
     bool valid_ind = false;
+    bool valid_bytes = false;
+    bool valid_cont = false;
+    
 
-    while ((opt = getopt(argc, argv, "d:u:p:t:o:f:i:c:")) != -1)
+    while ((opt = getopt(argc, argv, "d:u:p:t:o:f:i:b:c:")) != -1)
     {
         switch (opt)
         {
@@ -149,6 +158,9 @@ void gestionar_parametros(int argc, char* argv[], char* server_addr, credencial*
             valid_ind = strlen(optarg) > 0;
             *pos_archivo = atoi(optarg);
             break;
+        case 'b':
+            valid_bytes = strlen(optarg) > 0;
+            *bytes_a_leer_archivo = atoi(optarg);
         case 'c':
             valid_cont = strlen(optarg) > 0;
             strcpy(cont_archivo, optarg);
@@ -163,7 +175,7 @@ void gestionar_parametros(int argc, char* argv[], char* server_addr, credencial*
     }
 
     *auth = valid_dir && valid_user && valid_pass; 
-    *inter = valid_dir && valid_token && valid_opt && valid_file && (valid_cont || valid_ind);
+    *inter = valid_dir && valid_token && valid_opt && valid_file && (valid_cont || (valid_ind && valid_bytes));
 }
 
 void server_auth(struct sockaddr_in* server_sock, int* server_fd, char* server_addr, credencial* cred, char* token)
@@ -179,13 +191,13 @@ void server_auth(struct sockaddr_in* server_sock, int* server_fd, char* server_a
     if (strcmp(token, ERROR_TOKEN) != 0)
         printf("Token obtenido de serverAuth: %s\n", token);
     else
-        printf("Error: no se pudo obtener un token valido, credenciales incorrectas\n");
+        printf("Error: no se pudo obtener un token valido\n");
 
     // Cerrar la conexion
     close(*server_fd);
 }
 
-void server_interact(char* server_addr, char* token, char* opc_inter, char* nombre_archivo, int pos_archivo, char* cont_archivo)
+void server_interact(char* server_addr, char* token, char* opc_inter, char* nombre_archivo, int pos_archivo, int bytes_a_leer_archivo, char* cont_archivo)
 {
     bool es_leer = (strcmp(opc_inter, OPC_LEER) == 0);
     bool es_escribir = (strcmp(opc_inter, OPC_ESCRIBIR) == 0);
@@ -211,6 +223,7 @@ void server_interact(char* server_addr, char* token, char* opc_inter, char* nomb
                 params.token = token;
                 params.nombre_archivo = nombre_archivo;
                 params.posicion = pos_archivo;
+                params.bytes_a_leer = bytes_a_leer_archivo;
 
                 // Llamar a serverInteract
                 char** res_lectura = leer_1(&params, client_rpc);
@@ -220,7 +233,7 @@ void server_interact(char* server_addr, char* token, char* opc_inter, char* nomb
                     exit(EXIT_FAILURE);
                 }
                 else
-                    printf("Lectura de %s:\n%s", nombre_archivo, *res_lectura);
+                    printf("Lectura de %s:\n%s\n", nombre_archivo, *res_lectura);
             }
             else if (es_escribir)
             {

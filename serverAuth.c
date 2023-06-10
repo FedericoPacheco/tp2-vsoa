@@ -19,8 +19,6 @@ void configurar_conexion(struct sockaddr_in* sock, int* server_fd, int* opt);
 // Autenticacion del usuario
 #define USER_LEN 21
 #define PASS_LEN 21
-#define TOKEN_LEN 7
-#define ERROR_TOKEN "-1"
 
 struct credencial 
 {
@@ -30,12 +28,17 @@ struct credencial
 typedef struct credencial credencial;
 
 bool validar_usuario(credencial cred);
-void generar_token(char* token);
 
 // -----------------------------------------------------------------
 // Generacion de tokens
-const char gen_set[] = "0123456789abcdef";
+#define TOKEN_LEN 7
+#define ERROR_TOKEN "-1"
+#define TOKENS_FILE_NAME "tokens_validos.txt"
 
+const char gen_set[] = "0123456789abcdef";
+void generar_token(char* token);
+
+// -----------------------------------------------------------------
 int main(int argc, char const* argv[])
 {
     struct sockaddr_in sock;
@@ -49,6 +52,7 @@ int main(int argc, char const* argv[])
     char token[TOKEN_LEN];
     char client_addr[16];
 
+    printf("SERVER AUTH\n---------------\n");
     while(true) 
     {
         // Aceptar la conexion del cliente
@@ -78,7 +82,7 @@ int main(int argc, char const* argv[])
                 strcpy(token, ERROR_TOKEN);
             }
             send(client_fd, token, TOKEN_LEN, 0);
-            printf("Token enviado al cliente\n");
+            printf("Token enviado al cliente\n\n");
                 
             // Cerrar la conexion con el cliente
             close(client_fd);
@@ -99,9 +103,7 @@ bool validar_usuario(credencial cred)
 
     FILE* info_usuarios = fopen("info_usuarios.txt", "r");
     if (info_usuarios == NULL) 
-    {
         printf("Error: no pudo abrirse info_usuarios.txt\n");
-    }
     else
     {
         // Ignorar encabezados
@@ -120,11 +122,33 @@ bool validar_usuario(credencial cred)
 
 void generar_token(char* token)
 {
-    srand(time(NULL));
+    char aux_token[TOKEN_LEN];
 
-    for (int i = 0; i < TOKEN_LEN - 1; i++)
-        token[i] = gen_set[rand() % sizeof(gen_set)];
-    token[TOKEN_LEN - 1] = '\0';
+    FILE* archivo_tokens = fopen(TOKENS_FILE_NAME, "a");
+    if (archivo_tokens == NULL)
+    {
+        strcpy(aux_token, ERROR_TOKEN);
+        printf("Error: no pudo abrirse el archivo TOKEN_FILE_NAME\n");
+    }
+    else
+    {
+        // Muestrear pseudo-aleatoriamente el gen_set
+        srand(time(NULL));
+        for (int i = 0; i < TOKEN_LEN - 1; i++)
+            aux_token[i] = gen_set[rand() % (sizeof(gen_set) - 1)];
+        aux_token[TOKEN_LEN - 1] = '\0';
+
+        if (fputs(aux_token, archivo_tokens) < 0)
+        {
+            strcpy(aux_token, ERROR_TOKEN);
+            printf("Error: no pudo guardarse el token\n");
+        }
+        else
+            fputc('\n', archivo_tokens);
+    }
+    fclose(archivo_tokens);
+
+    strcpy(token, aux_token);
 }
 
 void configurar_conexion(struct sockaddr_in* sock, int* server_fd, int* opt)

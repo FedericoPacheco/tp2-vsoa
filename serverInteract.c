@@ -7,6 +7,12 @@
 
 #include "serverInteract.h"
 
+#define MAX_LEN_READ 1024
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
+#define TOKENS_FILE_NAME "tokens_validos.txt"
+#define TOKEN_LEN 7
+
 int* escribir_1_svc(params_escribir* argp, struct svc_req* rqstp)
 {
 	static int res = -1;
@@ -39,12 +45,9 @@ char** leer_1_svc(params_leer* argp, struct svc_req* rqstp)
 {
 	// Reservar memoria para guardar la lectura
 	static char* res;
-	static char buf[1024];
-	memset(buf, '\0', sizeof(buf));
+	static char buf[MAX_LEN_READ];
+	memset(buf, '\0', MAX_LEN_READ);
 	res = buf;
-
-	char aux_buf[1024];
-	memset(aux_buf, '\0', sizeof(aux_buf));
 
 	// Recuperar dir ip del cliente
 	char* client_addr = inet_ntoa(((struct sockaddr_in*)svc_getcaller(rqstp->rq_xprt))->sin_addr);
@@ -59,11 +62,19 @@ char** leer_1_svc(params_leer* argp, struct svc_req* rqstp)
 			// Posicionarse dentro del archivo
 			fseek(archivo, argp->posicion, SEEK_SET);
 
-			// Seguir leyendo a pesar de los '\n'
-			while (fgets(aux_buf, sizeof(aux_buf), archivo) != NULL)
-				strcat(res, aux_buf);
+			int i = 0;
+			int cota_sup = min(argp->bytes_a_leer, MAX_LEN_READ - 1);
+			int ch;
+			while ((ch = fgetc(archivo)) != EOF && i < cota_sup)
+			{
+				printf("%d:%c ", i, ch);
+				buf[i] = ch;
+				i++;
+			}
+			buf[cota_sup] = '\0';
 
 			printf("(cliente: %s) Se leyo con exito del archivo: %s\n", client_addr, argp->nombre_archivo);
+			fclose(archivo);
 		}
 	}
 	else
@@ -74,7 +85,18 @@ char** leer_1_svc(params_leer* argp, struct svc_req* rqstp)
 
 bool validar_token(char* token)
 {
-	return 1 - abs(strcmp("1234", token));
+	FILE* archivo_tokens = fopen(TOKENS_FILE_NAME, "r");
+	
+	// Buscar linealmente en el archivo de los tokens hasta encontrarlo o llegar al final
+	char buf[TOKEN_LEN];
+	bool token_valido = false;
+	while (fscanf(archivo_tokens, "%s", buf) == 1 && !token_valido)
+		if (strcmp(buf, token) == 0)
+			token_valido = true;
+	
+	fclose(archivo_tokens);
+	
+	return token_valido;
 }
 
 

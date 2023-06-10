@@ -10,6 +10,7 @@ struct params_leer
 	string token<7>;
 	string nombre_archivo<256>;
 	int posicion;
+	int bytes_a_leer;
 };
 
 program serverInteract 
